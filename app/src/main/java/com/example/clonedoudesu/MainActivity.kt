@@ -2,8 +2,10 @@ package com.example.clonedoudesu
 
 import android.os.Bundle
 import android.util.Log
+import android.view.MenuItem // Import MenuItem
 import android.view.View
 import android.widget.SearchView
+import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
@@ -15,9 +17,10 @@ import androidx.recyclerview.widget.PagerSnapHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.example.clonedoudesu.adapter.KomikAdapter
 import com.example.clonedoudesu.viewmodel.KomikViewModel
-import kotlinx.coroutines.Job // Import Job
-import kotlinx.coroutines.delay // Import delay
-import kotlinx.coroutines.isActive // Import isActive
+import com.google.android.material.bottomnavigation.BottomNavigationView // Import BottomNavigationView
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
@@ -33,9 +36,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var searchResultsRecyclerView: RecyclerView
     private lateinit var searchResultsAdapter: KomikAdapter
     private lateinit var mainContentLayout: View 
+    private lateinit var bottomNavigationView: BottomNavigationView // Deklarasi BottomNavigationView
 
-    private var searchDebounceJob: Job? = null // Job untuk debouncing
-    private val SEARCH_DEBOUNCE_DELAY_MS = 500L // Waktu tunda 500ms
+    private var searchDebounceJob: Job? = null
+    private val SEARCH_DEBOUNCE_DELAY_MS = 500L
 
     private val TAG_MAIN_ACTIVITY = "MainActivity"
 
@@ -55,6 +59,7 @@ class MainActivity : AppCompatActivity() {
         searchResultsRecyclerView = findViewById(R.id.search_results_recycler_view)
         searchResultsAdapter = KomikAdapter()
         mainContentLayout = findViewById(R.id.main_content_layout) 
+        bottomNavigationView = findViewById(R.id.bottom_navigation_view) // Inisialisasi BottomNavigationView
 
         setupRecyclerView(R.id.rekomendasi_recycler_view, rekomendasiAdapter, "Rekomendasi", LinearLayoutManager.HORIZONTAL)
         setupRecyclerView(R.id.terbaru2_recycler_view, terbaru2Adapter, "TerbaruV2", LinearLayoutManager.HORIZONTAL)
@@ -67,6 +72,7 @@ class MainActivity : AppCompatActivity() {
         observeData()
         observeSearchResults()
         setupSearchView()
+        setupBottomNavigation() // Panggil setup untuk Bottom Navigation
     }
 
     private fun fetchAllData() {
@@ -99,31 +105,28 @@ class MainActivity : AppCompatActivity() {
     private fun setupSearchView() {
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
-                searchDebounceJob?.cancel() // Batalkan job debounce jika ada
+                searchDebounceJob?.cancel()
                 val submittedQuery = query?.trim()
                 if (!submittedQuery.isNullOrBlank()) {
                     Log.d(TAG_MAIN_ACTIVITY, "Search submitted: $submittedQuery")
                     komikViewModel.searchKomik(submittedQuery) 
                 }
-                searchView.clearFocus() // Selalu hapus fokus setelah submit
+                searchView.clearFocus()
                 return true
             }
 
             override fun onQueryTextChange(newText: String?): Boolean {
-                searchDebounceJob?.cancel() // Batalkan job debounce sebelumnya
+                searchDebounceJob?.cancel()
                 val currentQuery = newText?.trim()
-
                 if (!currentQuery.isNullOrBlank()) {
                     searchDebounceJob = lifecycleScope.launch {
                         delay(SEARCH_DEBOUNCE_DELAY_MS)
-                        // Pastikan coroutine masih aktif dan query di SearchView masih sama
                         if (isActive && currentQuery == searchView.query.toString().trim()) {
                             Log.d(TAG_MAIN_ACTIVITY, "Debounced search for: $currentQuery")
                             komikViewModel.searchKomik(currentQuery)
                         }
                     }
                 } else {
-                    // Jika query kosong, langsung kosongkan hasil
                     Log.d(TAG_MAIN_ACTIVITY, "Search query is blank, clearing results.")
                     komikViewModel.searchKomik("")
                 }
@@ -133,12 +136,44 @@ class MainActivity : AppCompatActivity() {
 
         val closeButton: View? = searchView.findViewById(androidx.appcompat.R.id.search_close_btn)
         closeButton?.setOnClickListener {
-            searchDebounceJob?.cancel() // Batalkan job debounce jika ada
+            searchDebounceJob?.cancel()
             searchView.setQuery("", false) 
             searchView.clearFocus()
             komikViewModel.searchKomik("") 
             showMainContent() 
         }
+    }
+
+    private fun setupBottomNavigation() {
+        bottomNavigationView.setOnItemSelectedListener { item: MenuItem ->
+            when (item.itemId) {
+                R.id.nav_home -> {
+                    Toast.makeText(this, "Beranda Dipilih", Toast.LENGTH_SHORT).show()
+                    Log.d(TAG_MAIN_ACTIVITY, "BottomNav: Home selected")
+                    // TODO: Implementasi navigasi ke Beranda (misalnya, tampilkan konten beranda jika tersembunyi)
+                    showMainContent() // Contoh: tampilkan konten utama jika Beranda diklik
+                    searchView.setQuery("",false) // Kosongkan query search jika ada
+                    searchView.clearFocus()
+                    komikViewModel.searchKomik("") // Kosongkan hasil search di ViewModel
+                    true
+                }
+                R.id.nav_explore -> {
+                    Toast.makeText(this, "Jelajah Dipilih", Toast.LENGTH_SHORT).show()
+                    Log.d(TAG_MAIN_ACTIVITY, "BottomNav: Explore selected")
+                    // TODO: Implementasi navigasi ke Jelajah (misal buka Activity/Fragment Jelajah)
+                    true
+                }
+                R.id.nav_favorites -> {
+                    Toast.makeText(this, "Favorit Dipilih", Toast.LENGTH_SHORT).show()
+                    Log.d(TAG_MAIN_ACTIVITY, "BottomNav: Favorites selected")
+                    // TODO: Implementasi navigasi ke Favorit
+                    true
+                }
+                else -> false
+            }
+        }
+        // Set item default yang terpilih jika perlu (misalnya Beranda)
+        // bottomNavigationView.selectedItemId = R.id.nav_home 
     }
 
     private fun observeData() {
@@ -158,9 +193,6 @@ class MainActivity : AppCompatActivity() {
                     if (results.isNotEmpty()) {
                         showSearchResults()
                     } else {
-                        // Jika hasil kosong TAPI query di searchView TIDAK kosong,
-                        // itu berarti pencarian tidak menghasilkan apa-apa (tetap tampilkan area search results).
-                        // Jika query juga kosong (misal setelah tekan X atau dikosongkan manual), tampilkan konten utama.
                         if (searchView.query.isNullOrBlank()) {
                             showMainContent()
                         } else {
@@ -183,8 +215,7 @@ class MainActivity : AppCompatActivity() {
         searchResultsRecyclerView.visibility = View.GONE
         mainContentLayout.visibility = View.VISIBLE 
         if (searchView.query.isNullOrBlank()) {
-            // Tidak perlu clearFocus() di sini karena bisa mengganggu jika pengguna ingin mengklik konten utama
-            // searchView.clearFocus()
+            // searchView.clearFocus() // Tidak selalu clear focus di sini
         }
     }
 }
