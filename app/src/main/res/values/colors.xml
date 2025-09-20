@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+
+    <!-- Warna dari skema Compose (Light) -->
+    <color name="purple_500">#FF6650a4</color> <!-- Purple40 -->
+    <color name="purple_700">#FF625b71</color> <!-- PurpleGrey40 -->
+    <color name="pink_200">#FFEFB8C8</color>   <!-- Pink80 (bisa jadi secondary untuk light) -->
+    <color name="pink_700">#FF7D5260</color>   <!-- Pink40 -->
+
+    <!-- Warna dasar standar -->
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <!-- Warna yang dirujuk di style.xml (contoh) -->
+    <color name="colorPrimary">@color/purple_500</color>
+    <color name="colorPrimaryDark">@color/purple_700</color>
+    <color name="colorAccent">@color/pink_200</color> <!-- atau @color/pink_700 -->
+
+    <!-- Warna untuk onPrimary, onSecondary jika diperlukan untuk tema XML -->
+    <color name="colorWhite">#FFFFFFFF</color> <!-- Untuk colorOnPrimary di themes.xml -->
+    <color name="colorBlack">#FF000000</color> <!-- Untuk colorOnSecondary di themes.xml -->
+
+</resources>

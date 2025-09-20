@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">CloneDouDesu</string>
+    <string name="rekomendasi_untukmu">Rekomendasi Untukmu</string>
+    <string name="lagi_trending">Lagi Trending</string>
+    <string name="terbaru_season_ini">Terbaru Season Ini</string>
+    <string name="update_terbaru">Update Terbaru</string>
+    <string name="lanjutkan_membaca">Lanjutkan Membaca</string>
+    <string name="komik_berwarna">Komik Berwarna</string>
+    <string name="komik_terpopuler">Komik Terpopuler</string>
+    <string name="todo">TODO</string>
+</resources>
